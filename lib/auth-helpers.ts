@@ -1,6 +1,7 @@
 import { auth } from "./auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
 import type { Session } from "./auth";
 
 /**
@@ -86,6 +87,9 @@ export async function isAuthenticated(): Promise<boolean> {
 /**
  * Require authentication - redirects to sign-in if not authenticated
  * 
+ * Use in Server Components and Server Actions (not API routes)
+ * For API routes, use requireAuthApi() instead
+ * 
  * @returns The current user session
  * 
  * @example
@@ -100,6 +104,39 @@ export async function requireAuth(): Promise<Session> {
 
   if (!session?.user) {
     redirect("/sign-in");
+  }
+
+  return session;
+}
+
+/**
+ * Require authentication for API routes - returns 401 if not authenticated
+ * 
+ * Use this in API route handlers instead of requireAuth()
+ * 
+ * @returns The current user session
+ * @throws NextResponse with 401 status if not authenticated
+ * 
+ * @example
+ * ```tsx
+ * // In an API route
+ * export async function GET() {
+ *   const session = await requireAuthApi();
+ *   if (session instanceof NextResponse) {
+ *     return session; // 401 response
+ *   }
+ *   // Now you can safely use session.user
+ * }
+ * ```
+ */
+export async function requireAuthApi(): Promise<Session | NextResponse> {
+  const session = await getSession();
+
+  if (!session?.user) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
   }
 
   return session;
@@ -125,6 +162,9 @@ export async function requireUser() {
 /**
  * Require authentication and return the user ID
  * 
+ * Use in Server Components and Server Actions (not API routes)
+ * For API routes, use requireUserIdApi() instead
+ * 
  * @returns The current user ID
  * 
  * @example
@@ -137,4 +177,33 @@ export async function requireUser() {
 export async function requireUserId(): Promise<string> {
   const user = await requireUser();
   return user.id;
+}
+
+/**
+ * Require authentication and return the user ID for API routes
+ * 
+ * Use this in API route handlers instead of requireUserId()
+ * 
+ * @returns The current user ID or NextResponse with 401 if not authenticated
+ * 
+ * @example
+ * ```tsx
+ * // In an API route
+ * export async function GET() {
+ *   const userIdOrResponse = await requireUserIdApi();
+ *   if (userIdOrResponse instanceof NextResponse) {
+ *     return userIdOrResponse; // 401 response
+ *   }
+ *   // Use userIdOrResponse as userId for database operations
+ * }
+ * ```
+ */
+export async function requireUserIdApi(): Promise<string | NextResponse> {
+  const session = await requireAuthApi();
+  
+  if (session instanceof NextResponse) {
+    return session;
+  }
+  
+  return session.user.id;
 }
