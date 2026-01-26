@@ -24,6 +24,13 @@ export const auth = betterAuth({
   },
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:3001", // For potential port changes
+    ...(process.env.NODE_ENV === "production"
+      ? [process.env.BETTER_AUTH_URL || ""]
+      : []),
+  ].filter(Boolean), // Remove empty strings
 });
 
 export type Session = typeof auth.$Infer.Session;
