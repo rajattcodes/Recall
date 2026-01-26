@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -11,4 +8,93 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum ProblemStatus {
+  fresh
+  active
+  failed
+  mastered
+}
+
+enum ReminderStage {
+  day_3
+  day_10
+  day_30
+  completed
+}
+
+enum AttemptResult {
+  solved
+  failed
+}
+
+// Tables
+model CanonicalPattern {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  customPatterns CustomPattern[]
+  problems      Problem[]
+
+  @@map("canonical_patterns")
+}
+
+model CustomPattern {
+  id                 String   @id @default(cuid())
+  userId             String   @map("user_id")
+  name               String
+  canonicalPatternId String   @map("canonical_pattern_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  // Relations
+  canonicalPattern CanonicalPattern @relation(fields: [canonicalPatternId], references: [id])
+  problems         Problem[]
+
+  @@unique([userId, name])
+  @@map("custom_patterns")
+}
+
+model Problem {
+  id                 String        @id @default(cuid())
+  userId             String        @map("user_id")
+  title              String
+  leetcodeUrl        String        @map("leetcode_url")
+  canonicalPatternId String        @map("canonical_pattern_id")
+  customPatternId    String?       @map("custom_pattern_id")
+  status             ProblemStatus @default(fresh)
+  reminderStage      ReminderStage @default(day_3) @map("reminder_stage")
+  nextReminderDate   DateTime      @map("next_reminder_date")
+  failureCount       Int           @default(0) @map("failure_count")
+  totalAttempts      Int           @default(0) @map("total_attempts")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  lastAttemptedAt    DateTime?     @map("last_attempted_at")
+
+  // Relations
+  canonicalPattern CanonicalPattern @relation(fields: [canonicalPatternId], references: [id])
+  customPattern    CustomPattern?   @relation(fields: [customPatternId], references: [id])
+  attemptHistory   AttemptHistory[]
+
+  @@index([userId, nextReminderDate])
+  @@index([status])
+  @@index([canonicalPatternId])
+  @@map("problems")
+}
+
+model AttemptHistory {
+  id          String        @id @default(cuid())
+  problemId   String        @map("problem_id")
+  attemptedAt DateTime      @default(now()) @map("attempted_at")
+  result      AttemptResult
+  notes       String?
+
+  // Relations
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("attempt_history")
 }
