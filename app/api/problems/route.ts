@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUserIdApi } from "@/lib/auth-helpers";
 import { addDays } from "date-fns";
-import { z, ZodError } from "zod";
+import { z } from "zod";
+import { handleApiError, createNotFoundError } from "@/lib/api-errors";
 
 /**
  * GET /api/problems
@@ -34,11 +35,7 @@ export async function GET() {
 
     return NextResponse.json(problems);
   } catch (error) {
-    console.error("Error fetching problems:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch problems" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -55,9 +52,16 @@ export async function GET() {
  * Body: { title, leetcodeUrl, canonicalPatternId, customPatternId? }
  */
 const createProblemSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  leetcodeUrl: z.string().url("Invalid LeetCode URL"),
-  canonicalPatternId: z.string().min(1, "Canonical pattern is required"),
+  title: z
+    .string()
+    .min(1, "Title is required and must be at least 1 character"),
+  leetcodeUrl: z
+    .string()
+    .min(1, "LeetCode URL is required")
+    .url("Please provide a valid LeetCode URL (e.g., https://leetcode.com/problems/...)"),
+  canonicalPatternId: z
+    .string()
+    .min(1, "Canonical pattern is required - please select a pattern"),
   customPatternId: z.string().optional().nullable(),
 });
 
@@ -79,10 +83,7 @@ export async function POST(request: Request) {
     });
 
     if (!canonicalPattern) {
-      return NextResponse.json(
-        { error: "Canonical pattern not found" },
-        { status: 404 }
-      );
+      return createNotFoundError("Canonical pattern");
     }
 
     // Verify custom pattern exists and belongs to user (if provided)
@@ -95,10 +96,7 @@ export async function POST(request: Request) {
       });
 
       if (!customPattern) {
-        return NextResponse.json(
-          { error: "Custom pattern not found or does not belong to user" },
-          { status: 404 }
-        );
+        return createNotFoundError("Custom pattern");
       }
     }
 
@@ -125,17 +123,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(problem, { status: 201 });
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        { error: "Validation error" },
-        { status: 400 }
-      );
-    }
-
-    console.error("Error creating problem:", error);
-    return NextResponse.json(
-      { error: "Failed to create problem" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

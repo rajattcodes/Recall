@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUserIdApi } from "@/lib/auth-helpers";
-import { z, ZodError } from "zod";
+import { z } from "zod";
+import { handleApiError, createNotFoundError, createConflictError } from "@/lib/api-errors";
 
 /**
  * GET /api/patterns/custom
@@ -31,11 +32,7 @@ export async function GET() {
 
     return NextResponse.json(patterns);
   } catch (error) {
-    console.error("Error fetching custom patterns:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch custom patterns" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -52,8 +49,13 @@ export async function GET() {
  * Enforces unique constraint: UNIQUE(userId, name)
  */
 const createCustomPatternSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  canonicalPatternId: z.string().min(1, "Canonical pattern is required"),
+  name: z
+    .string()
+    .min(1, "Pattern name is required and must be at least 1 character")
+    .max(100, "Pattern name must be less than 100 characters"),
+  canonicalPatternId: z
+    .string()
+    .min(1, "Canonical pattern is required - please select a canonical pattern"),
 });
 
 export async function POST(request: Request) {
@@ -74,10 +76,7 @@ export async function POST(request: Request) {
     });
 
     if (!canonicalPattern) {
-      return NextResponse.json(
-        { error: "Canonical pattern not found" },
-        { status: 404 }
-      );
+      return createNotFoundError("Canonical pattern");
     }
 
     // Create custom pattern
@@ -98,25 +97,11 @@ export async function POST(request: Request) {
     } catch (error: any) {
       // Handle Prisma unique constraint violation
       if (error.code === "P2002") {
-        return NextResponse.json(
-          { error: "A custom pattern with this name already exists" },
-          { status: 409 }
-        );
+        return createConflictError("A custom pattern with this name already exists");
       }
-      throw error; // Re-throw if it's a different error
+      throw error;
     }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        { error: "Validation error" },
-        { status: 400 }
-      );
-    }
-
-    console.error("Error creating custom pattern:", error);
-    return NextResponse.json(
-      { error: "Failed to create custom pattern" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

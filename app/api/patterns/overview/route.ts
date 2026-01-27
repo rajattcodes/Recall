@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUserIdApi } from "@/lib/auth-helpers";
+import { handleApiError } from "@/lib/api-errors";
 
 /**
  * GET /api/patterns/overview
@@ -76,10 +77,6 @@ export async function GET() {
 
     return NextResponse.json(overview);
   } catch (error) {
-    console.error("Error fetching patterns overview:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch patterns overview" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

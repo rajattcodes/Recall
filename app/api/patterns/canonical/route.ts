@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { handleApiError } from "@/lib/api-errors";
 
 /**
  * GET /api/patterns/canonical
@@ -18,10 +19,6 @@ export async function GET() {
 
     return NextResponse.json(patterns);
   } catch (error) {
-    console.error("Error fetching canonical patterns:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch canonical patterns" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

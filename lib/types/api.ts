@@ -86,7 +86,34 @@ export interface MarkProblemRequest {
 /**
  * API Error response
  */
-export interface ApiError {
+export interface ApiErrorResponse {
   error: string;
-  details?: string;
+  details?: string | string[];
+  code?: string;
+}
+
+/**
+ * Standard API response wrapper
+ */
+export interface ApiResponse<T = unknown> {
+  data?: T;
+  error?: ApiErrorResponse;
+}
+
+/**
+ * Pagination metadata
+ */
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+/**
+ * Paginated API response
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
 }
