@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { PatternOverview } from "@/lib/types/api";
 import {
   Card,
@@ -22,7 +23,7 @@ interface PatternCardProps {
 /**
  * Reusable pattern card component for displaying pattern overview
  */
-export function PatternCard({
+export const PatternCard = memo(function PatternCard({
   pattern,
   onClick,
   asLink,
@@ -94,7 +95,7 @@ export function PatternCard({
       </CardContent>
     </Card>
   );
-}
+});
 
 /**
  * Skeleton loading state for PatternCard

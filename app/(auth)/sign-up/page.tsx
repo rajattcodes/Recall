@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { Loader2, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logError } from "@/lib/error-logger";
 
 export default function SignUpPage() {
   const { data: session } = authClient.useSession();
@@ -111,9 +112,10 @@ export default function SignUpPage() {
       }
       
       window.location.href = "/today";
-    } catch (error: any) {
-      console.error("Sign up error:", error);
-      toast.error(error.message || "Failed to create account");
+    } catch (error) {
+      logError(error, { action: "sign_up" });
+      const message = error instanceof Error ? error.message : "Failed to create account";
+      toast.error(message);
       setLoading(false);
     }
   };

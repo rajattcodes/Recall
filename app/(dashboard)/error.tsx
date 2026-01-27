@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/page-header";
 import { AlertCircle } from "lucide-react";
+import { logError } from "@/lib/error-logger";
 
 export default function DashboardError({
   error,
@@ -13,7 +14,7 @@ export default function DashboardError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Dashboard error:", error);
+    logError(error, { digest: error.digest, context: "dashboard" });
   }, [error]);
 
   return (

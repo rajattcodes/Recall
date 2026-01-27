@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
 import { authClient } from "@/lib/auth-client";
 
 /**
@@ -25,12 +26,19 @@ import { authClient } from "@/lib/auth-client";
 export function useAuth() {
   const { data: session, isPending, error } = authClient.useSession();
 
-  return {
-    user: session?.user || null,
-    session: session || null,
-    isAuthenticated: !!session?.user,
-    isLoading: isPending,
-    error,
-    signOut: () => authClient.signOut(),
-  };
+  const signOutFn = useCallback(() => {
+    authClient.signOut();
+  }, []);
+
+  return useMemo(
+    () => ({
+      user: session?.user || null,
+      session: session || null,
+      isAuthenticated: !!session?.user,
+      isLoading: isPending,
+      error,
+      signOut: signOutFn,
+    }),
+    [session, isPending, error, signOutFn]
+  );
 }

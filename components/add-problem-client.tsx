@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
+import { logError } from "@/lib/error-logger";
 
 interface AddProblemClientProps {
   initialCanonicalPatterns: CanonicalPattern[];
@@ -69,9 +70,10 @@ export function AddProblemClient({
 
       toast.success("Problem added successfully!");
       router.push("/today");
-    } catch (error: any) {
-      console.error("Error creating problem:", error);
-      toast.error(error.message || "Failed to create problem");
+    } catch (error) {
+      logError(error, { action: "create_problem" });
+      const message = error instanceof Error ? error.message : "Failed to create problem";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

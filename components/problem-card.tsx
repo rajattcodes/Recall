@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Problem } from "@/lib/types/api";
 import {
   Card,
@@ -44,7 +45,7 @@ const statusColors: Record<string, string> = {
   mastered: "border-l-green-500",
 };
 
-export function ProblemCard({
+export const ProblemCard = memo(function ProblemCard({
   problem,
   onMarkSolved,
   onMarkFailed,
@@ -115,11 +116,12 @@ export function ProblemCard({
               onClick={onMarkFailed}
               disabled={isLoading}
               className="flex-1 sm:flex-initial text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+              aria-label="Mark problem as failed"
             >
               {isLoading ? (
-                <Loader2 className="size-4 animate-spin" />
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
               ) : (
-                <XCircle className="size-4 mr-1.5" />
+                <XCircle className="size-4 mr-1.5" aria-hidden="true" />
               )}
               Failed
             </Button>
@@ -128,11 +130,12 @@ export function ProblemCard({
               onClick={onMarkSolved}
               disabled={isLoading}
               className="flex-1 sm:flex-initial bg-green-600 hover:bg-green-700 text-white"
+              aria-label="Mark problem as solved"
             >
               {isLoading ? (
-                <Loader2 className="size-4 animate-spin" />
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
               ) : (
-                <CheckCircle className="size-4 mr-1.5" />
+                <CheckCircle className="size-4 mr-1.5" aria-hidden="true" />
               )}
               Solved
             </Button>
@@ -141,4 +144,4 @@ export function ProblemCard({
       </CardContent>
     </Card>
   );
-}
+});

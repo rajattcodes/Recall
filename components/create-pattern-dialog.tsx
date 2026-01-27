@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { CustomPattern } from "@/lib/types/api";
+import { logError } from "@/lib/error-logger";
 
 interface CreatePatternDialogProps {
   canonicalPatternId: string;
@@ -66,9 +67,10 @@ export function CreatePatternDialog({
       setName("");
       setOpen(false);
       toast.success("Custom pattern created!");
-    } catch (error: any) {
-      console.error("Error creating custom pattern:", error);
-      toast.error(error.message || "Failed to create pattern");
+    } catch (error) {
+      logError(error, { action: "create_custom_pattern", canonicalPatternId });
+      const message = error instanceof Error ? error.message : "Failed to create pattern";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -91,7 +93,11 @@ export function CreatePatternDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
+          <label htmlFor="pattern-name-input" className="sr-only">
+            Custom Pattern Name
+          </label>
           <Input
+            id="pattern-name-input"
             placeholder="e.g., Shrinkable Window"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -101,7 +107,12 @@ export function CreatePatternDialog({
               }
             }}
             disabled={loading}
+            aria-label="Custom pattern name"
+            aria-describedby="pattern-name-description"
           />
+          <p id="pattern-name-description" className="sr-only">
+            Enter a name for your custom pattern variation under {canonicalPatternName}
+          </p>
         </div>
         <DialogFooter>
           <Button
