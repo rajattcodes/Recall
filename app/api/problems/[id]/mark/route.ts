@@ -6,7 +6,8 @@ import {
   markProblemFailed,
   StateMachineError,
 } from "@/features/problems/lib/state-machine";
-import { z, ZodError } from "zod";
+import { z } from "zod";
+import { handleApiError, createNotFoundError } from "@/lib/api-errors";
 
 /**
  * PATCH /api/problems/[id]/mark
@@ -45,10 +46,7 @@ export async function PATCH(
     });
 
     if (!problem) {
-      return NextResponse.json(
-        { error: "Problem not found or does not belong to user" },
-        { status: 404 }
-      );
+      return createNotFoundError("Problem");
     }
 
     // Apply state transition based on result
@@ -104,25 +102,11 @@ export async function PATCH(
 
     return NextResponse.json(updatedProblem);
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        { error: "Validation error" },
-        { status: 400 }
-      );
-    }
-
     if (error instanceof StateMachineError) {
-      console.error("State machine error:", error.message);
-      return NextResponse.json(
-        { error: "Invalid state transition", details: error.message },
-        { status: 400 }
+      return handleApiError(
+        new Error(`Invalid state transition: ${error.message}`)
       );
     }
-
-    console.error("Error marking problem:", error);
-    return NextResponse.json(
-      { error: "Failed to mark problem" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

@@ -92,9 +92,9 @@ export function ProblemCard({
       </CardHeader>
 
       <CardContent className="pt-0">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Stats */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Target className="size-4" />
               {problem.totalAttempts} attempts
@@ -108,13 +108,13 @@ export function ProblemCard({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
               size="sm"
               variant="outline"
               onClick={onMarkFailed}
               disabled={isLoading}
-              className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+              className="flex-1 sm:flex-initial text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
             >
               {isLoading ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -127,7 +127,7 @@ export function ProblemCard({
               size="sm"
               onClick={onMarkSolved}
               disabled={isLoading}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="flex-1 sm:flex-initial bg-green-600 hover:bg-green-700 text-white"
             >
               {isLoading ? (
                 <Loader2 className="size-4 animate-spin" />

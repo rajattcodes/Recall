@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUserIdApi } from "@/lib/auth-helpers";
+import { handleApiError } from "@/lib/api-errors";
 
 /**
  * GET /api/problems/failed
@@ -38,10 +39,6 @@ export async function GET() {
 
     return NextResponse.json(problems);
   } catch (error) {
-    console.error("Error fetching failed problems:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch failed problems" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

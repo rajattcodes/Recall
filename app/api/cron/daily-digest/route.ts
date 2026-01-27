@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendDailyDigest } from "@/lib/email";
+import { handleApiError, createUnauthorizedError } from "@/lib/api-errors";
 
 /**
  * GET /api/cron/daily-digest
@@ -33,18 +34,12 @@ export async function GET(request: Request) {
     }
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { error: "Unauthorized - Missing or invalid Authorization header" },
-        { status: 401 }
-      );
+      return createUnauthorizedError();
     }
 
-    const token = authHeader.substring(7); // Remove "Bearer " prefix
+    const token = authHeader.substring(7);
     if (token !== cronSecret) {
-      return NextResponse.json(
-        { error: "Unauthorized - Invalid cron secret" },
-        { status: 401 }
-      );
+      return createUnauthorizedError();
     }
 
     // Get today's date (end of day)
@@ -178,14 +173,6 @@ export async function GET(request: Request) {
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
-    console.error("Error in daily digest cron:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to process daily digest",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
