@@ -3,9 +3,21 @@ import { Resend } from "resend";
 /**
  * Resend Email Client
  * 
- * Initialize Resend client with API key from environment variables
+ * Lazy initialization of Resend client with API key from environment variables.
+ * This prevents build-time errors when RESEND_API_KEY is not available.
  */
-const resend = new Resend(process.env.RESEND_API_KEY);
+let _resend: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!_resend) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error("RESEND_API_KEY environment variable is not set");
+    }
+    _resend = new Resend(apiKey);
+  }
+  return _resend;
+}
 
 /**
  * Generate HTML email template for daily digest
@@ -182,7 +194,7 @@ export async function sendDailyDigest(
 
     const html = generateDailyDigestHTML(dueProblems, failedProblems);
 
-    const { error } = await resend.emails.send({
+    const { error } = await getResendClient().emails.send({
       from: fromEmail,
       to: userEmail,
       subject,
