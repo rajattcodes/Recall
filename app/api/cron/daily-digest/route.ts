@@ -26,7 +26,8 @@ export async function GET(request: Request) {
     const cronSecret = process.env.CRON_SECRET;
 
     if (!cronSecret) {
-      console.error("CRON_SECRET environment variable is not set");
+      const { logError } = await import("@/lib/error-logger");
+      logError(new Error("CRON_SECRET environment variable is not set"), { context: "cron_auth" });
       return NextResponse.json(
         { error: "Cron secret not configured" },
         { status: 500 }
@@ -159,8 +160,10 @@ export async function GET(request: Request) {
           );
         }
       } catch (error: any) {
-        console.error(`Error processing user ${user.id}:`, error);
-        errors.push(`Error processing user ${user.email}: ${error.message}`);
+        const { logError } = await import("@/lib/error-logger");
+        logError(error instanceof Error ? error : new Error(String(error)), { context: "cron_user_processing", userId: user.id });
+        const message = error instanceof Error ? error.message : "Unknown error";
+        errors.push(`Error processing user ${user.email}: ${message}`);
       }
     }
 

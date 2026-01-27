@@ -8,6 +8,7 @@ import { SectionHeader } from "@/components/section-header";
 import { toast } from "sonner";
 import { AlertTriangle, CalendarCheck, PartyPopper } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { logError } from "@/lib/error-logger";
 
 interface TodayProblemsClientProps {
   initialDueProblems: Problem[];
@@ -59,10 +60,8 @@ export function TodayProblemsClient({
         });
         toast.info("Problem marked as failed. Keep practicing!");
       }
-
-      router.refresh();
     } catch (error) {
-      console.error("Error marking problem:", error);
+      logError(error, { action: "mark_problem", problemId, result });
       toast.error("Failed to update problem");
     } finally {
       setActionLoading(null);

@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import type { Session } from "./auth";
+import { logError } from "./error-logger";
 
 /**
  * Server-side authentication utilities for Next.js App Router
@@ -32,7 +33,7 @@ export async function getSession(): Promise<Session | null> {
 
     return session;
   } catch (error) {
-    console.error("Error getting session:", error);
+    logError(error, { context: "get_session" });
     return null;
   }
 }

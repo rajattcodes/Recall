@@ -57,13 +57,13 @@ export function StatsModal({
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-2">
+          <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-2" id={descriptionId}>
             {withProblems.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 No patterns with problems yet.
               </p>
             ) : (
-              <ul className="space-y-1.5">
+              <ul className="space-y-1.5" role="list">
                 {withProblems.map((p) => (
                   <li key={p.canonical_pattern.id}>
                     <Link
@@ -94,28 +94,33 @@ export function StatsModal({
 
   const groups = groupProblemsByPattern(list);
 
+  const modalId = `stats-modal-${type}`;
+  const descriptionId = `${modalId}-description`;
+
   return (
     <Dialog open={!!type} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="sm:max-w-md"
-        aria-describedby={undefined}
+        aria-describedby={descriptionId}
       >
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle id={modalId}>{title}</DialogTitle>
         </DialogHeader>
-        {loading ? (
-          <p className="text-sm text-muted-foreground py-4">Loading...</p>
-        ) : groups.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4">
-            {type === "total"
-              ? "No problems yet."
-              : type === "due"
-                ? "Nothing due today."
-                : "No failed problems."}
-          </p>
-        ) : (
-          <ProblemsByPatternList groups={groups} />
-        )}
+        <div id={descriptionId}>
+          {loading ? (
+            <p className="text-sm text-muted-foreground py-4" role="status" aria-live="polite">Loading...</p>
+          ) : groups.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4">
+              {type === "total"
+                ? "No problems yet."
+                : type === "due"
+                  ? "Nothing due today."
+                  : "No failed problems."}
+            </p>
+          ) : (
+            <ProblemsByPatternList groups={groups} />
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

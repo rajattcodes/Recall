@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logError } from "@/lib/error-logger";
 
 export default function SignInPage() {
   const { data: session } = authClient.useSession();
@@ -103,9 +104,10 @@ export default function SignInPage() {
       }
       
       window.location.href = redirectTo;
-    } catch (error: any) {
-      console.error("Sign in error:", error);
-      toast.error(error.message || "Failed to sign in");
+    } catch (error) {
+      logError(error, { action: "sign_in" });
+      const message = error instanceof Error ? error.message : "Failed to sign in";
+      toast.error(message);
       setLoading(false);
     }
   };

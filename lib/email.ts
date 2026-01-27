@@ -202,13 +202,16 @@ export async function sendDailyDigest(
     });
 
     if (error) {
-      console.error("Resend API error:", error);
+      const { logError } = await import("./error-logger");
+      logError(error instanceof Error ? error : new Error(String(error)), { context: "resend_api" });
       return { success: false, error: error.message };
     }
 
     return { success: true };
-  } catch (error: any) {
-    console.error("Error sending daily digest email:", error);
-    return { success: false, error: error.message || "Unknown error" };
+  } catch (error) {
+    const { logError } = await import("./error-logger");
+    logError(error, { context: "send_daily_digest_email" });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: message };
   }
 }

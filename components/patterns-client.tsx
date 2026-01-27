@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { PatternOverview } from "@/lib/types/api";
 import { Problem } from "@/lib/types/api";
@@ -29,8 +29,19 @@ export function PatternsClient({ patterns }: PatternsClientProps) {
     due?: Problem[];
     failed?: Problem[];
   }>({});
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   const openModal = useCallback(async (type: StatsModalType) => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
     setModalType(type);
     if (type === "active") return;
     setModalLoading(true);
@@ -39,20 +50,39 @@ export function PatternsClient({ patterns }: PatternsClientProps) {
       due?: Problem[];
       failed?: Problem[];
     } = {};
-    if (type === "total") {
-      const res = await fetch("/api/problems");
-      if (res.ok) updates.all = (await res.json()) as Problem[];
+    
+    try {
+      if (type === "total") {
+        const res = await fetch("/api/problems", { signal });
+        if (res.ok && !signal.aborted) {
+          updates.all = (await res.json()) as Problem[];
+        }
+      }
+      if (type === "due") {
+        const res = await fetch("/api/problems/due", { signal });
+        if (res.ok && !signal.aborted) {
+          updates.due = (await res.json()) as Problem[];
+        }
+      }
+      if (type === "failed") {
+        const res = await fetch("/api/problems/failed", { signal });
+        if (res.ok && !signal.aborted) {
+          updates.failed = (await res.json()) as Problem[];
+        }
+      }
+      
+      if (!signal.aborted) {
+        setModalData((prev) => ({ ...prev, ...updates }));
+        setModalLoading(false);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
+      if (!signal.aborted) {
+        setModalLoading(false);
+      }
     }
-    if (type === "due") {
-      const res = await fetch("/api/problems/due");
-      if (res.ok) updates.due = (await res.json()) as Problem[];
-    }
-    if (type === "failed") {
-      const res = await fetch("/api/problems/failed");
-      if (res.ok) updates.failed = (await res.json()) as Problem[];
-    }
-    setModalData((prev) => ({ ...prev, ...updates }));
-    setModalLoading(false);
   }, []);
 
   const patternsWithProblems = patterns.filter((p) => p.total_problems > 0);

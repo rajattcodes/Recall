@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { logError } from "./error-logger";
 
 export interface ApiErrorResponse {
   error: string;
@@ -51,7 +52,7 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
   }
 
   if (error instanceof Error) {
-    console.error("API Error:", error.message, error.stack);
+    logError(error, { context: "api_error" });
     
     if (error.message.includes("Invalid state transition")) {
       return NextResponse.json(
@@ -94,7 +95,7 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
     );
   }
 
-  console.error("Unknown error:", error);
+  logError(new Error("Unknown error"), { originalError: error });
   return NextResponse.json(
     {
       error: "An unexpected error occurred",
