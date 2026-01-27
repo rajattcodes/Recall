@@ -1,0 +1,144 @@
+"use client";
+
+import { Problem } from "@/lib/types/api";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PatternBadge } from "@/components/pattern-badge";
+import {
+  ExternalLink,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  Target,
+  Loader2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface ProblemCardProps {
+  problem: Problem;
+  onMarkSolved: () => void;
+  onMarkFailed: () => void;
+  isLoading?: boolean;
+  showFailureCount?: boolean;
+}
+
+const stageLabels: Record<string, { label: string; color: string }> = {
+  day_3: { label: "Day 3", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400" },
+  day_10: { label: "Day 10", color: "bg-purple-500/10 text-purple-700 dark:text-purple-400" },
+  day_30: { label: "Day 30", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400" },
+  completed: { label: "Mastered", color: "bg-green-500/10 text-green-700 dark:text-green-400" },
+};
+
+const statusColors: Record<string, string> = {
+  fresh: "border-l-blue-500",
+  active: "border-l-purple-500",
+  failed: "border-l-destructive",
+  mastered: "border-l-green-500",
+};
+
+export function ProblemCard({
+  problem,
+  onMarkSolved,
+  onMarkFailed,
+  isLoading = false,
+  showFailureCount = false,
+}: ProblemCardProps) {
+  const stage = stageLabels[problem.reminderStage] || stageLabels.day_3;
+  const statusColor = statusColors[problem.status] || statusColors.fresh;
+
+  return (
+    <Card
+      className={cn(
+        "border-l-4 transition-all hover:shadow-md",
+        statusColor
+      )}
+    >
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1 min-w-0 flex-1">
+            <CardTitle className="text-lg leading-tight">
+              <a
+                href={problem.leetcodeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 hover:text-primary transition-colors group"
+              >
+                <span className="truncate">{problem.title}</span>
+                <ExternalLink className="size-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              </a>
+            </CardTitle>
+            <CardDescription className="flex flex-wrap items-center gap-2">
+              <PatternBadge
+                canonicalPattern={problem.canonicalPattern}
+                customPattern={problem.customPattern}
+              />
+            </CardDescription>
+          </div>
+
+          {/* Stage Badge */}
+          <Badge variant="secondary" className={cn("shrink-0", stage.color)}>
+            <Clock className="size-3 mr-1" />
+            {stage.label}
+          </Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Stats */}
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Target className="size-4" />
+              {problem.totalAttempts} attempts
+            </span>
+            {showFailureCount && problem.failureCount > 0 && (
+              <span className="flex items-center gap-1 text-destructive">
+                <AlertTriangle className="size-4" />
+                {problem.failureCount} failures
+              </span>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onMarkFailed}
+              disabled={isLoading}
+              className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+            >
+              {isLoading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <XCircle className="size-4 mr-1.5" />
+              )}
+              Failed
+            </Button>
+            <Button
+              size="sm"
+              onClick={onMarkSolved}
+              disabled={isLoading}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isLoading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <CheckCircle className="size-4 mr-1.5" />
+              )}
+              Solved
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

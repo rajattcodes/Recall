@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUserIdApi } from "@/lib/auth-helpers";
-import { markProblemSolved, markProblemFailed } from "@/features/problems/lib/state-machine";
+import {
+  markProblemSolved,
+  markProblemFailed,
+  StateMachineError,
+} from "@/features/problems/lib/state-machine";
 import { z, ZodError } from "zod";
 
 /**
@@ -103,6 +107,14 @@ export async function PATCH(
     if (error instanceof ZodError) {
       return NextResponse.json(
         { error: "Validation error" },
+        { status: 400 }
+      );
+    }
+
+    if (error instanceof StateMachineError) {
+      console.error("State machine error:", error.message);
+      return NextResponse.json(
+        { error: "Invalid state transition", details: error.message },
         { status: 400 }
       );
     }
