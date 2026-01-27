@@ -93,6 +93,25 @@ export const ProblemCard = memo(function ProblemCard({
       </CardHeader>
 
       <CardContent className="pt-0">
+        {problem.failureNotes && problem.failureNotes.length > 0 && (
+          <div className="mb-4 p-3 rounded-md bg-destructive/5 border border-destructive/20">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="size-4 text-destructive shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-1">
+                <p className="text-xs font-medium text-destructive">Previous failure:</p>
+                <ul className="text-sm text-muted-foreground space-y-0.5">
+                  {problem.failureNotes.map((note, index) => (
+                    <li key={index} className="flex items-start gap-1.5">
+                      <span className="text-destructive/60 shrink-0">•</span>
+                      <span>{note}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Stats */}
           <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-muted-foreground">

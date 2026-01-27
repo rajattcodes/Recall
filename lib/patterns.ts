@@ -20,7 +20,10 @@ export const getCanonicalPatterns = cache(async (): Promise<CanonicalPattern[]> 
     },
   });
 
-  return patterns;
+  return patterns.map((pattern) => ({
+    ...pattern,
+    createdAt: pattern.createdAt.toISOString(),
+  }));
 });
 
 export const getCanonicalPatternById = cache(
@@ -28,7 +31,11 @@ export const getCanonicalPatternById = cache(
     const pattern = await prisma.canonicalPattern.findUnique({
       where: { id },
     });
-    return pattern;
+    if (!pattern) return null;
+    return {
+      ...pattern,
+      createdAt: pattern.createdAt.toISOString(),
+    };
   }
 );
 
@@ -47,7 +54,14 @@ export const getCustomPatterns = cache(async (): Promise<CustomPattern[]> => {
     },
   });
 
-  return patterns;
+  return patterns.map((pattern) => ({
+    ...pattern,
+    createdAt: pattern.createdAt.toISOString(),
+    canonicalPattern: {
+      ...pattern.canonicalPattern,
+      createdAt: pattern.canonicalPattern.createdAt.toISOString(),
+    },
+  }));
 });
 
 export const getPatterns = cache(async () => {
@@ -103,7 +117,10 @@ export const getPatternsOverview = cache(async (): Promise<PatternOverview[]> =>
       ]);
 
       return {
-        canonical_pattern: canonicalPattern,
+        canonical_pattern: {
+          ...canonicalPattern,
+          createdAt: canonicalPattern.createdAt.toISOString(),
+        },
         total_problems: totalProblems,
         due_count: dueCount,
         failed_count: failedCount,

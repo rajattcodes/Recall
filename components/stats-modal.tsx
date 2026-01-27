@@ -45,6 +45,8 @@ export function StatsModal({
   if (!type) return null;
 
   const title = titles[type];
+  const modalId = `stats-modal-${type}`;
+  const descriptionId = `${modalId}-description`;
 
   if (type === "active") {
     const withProblems = patterns.filter((p) => p.total_problems > 0);
@@ -52,10 +54,10 @@ export function StatsModal({
       <Dialog open={!!type} onOpenChange={(open) => !open && onClose()}>
         <DialogContent
           className="sm:max-w-md"
-          aria-describedby={undefined}
+          aria-describedby={descriptionId}
         >
           <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle id={modalId}>{title}</DialogTitle>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-2" id={descriptionId}>
             {withProblems.length === 0 ? (
@@ -93,9 +95,6 @@ export function StatsModal({
         : problems.failed ?? [];
 
   const groups = groupProblemsByPattern(list);
-
-  const modalId = `stats-modal-${type}`;
-  const descriptionId = `${modalId}-description`;
 
   return (
     <Dialog open={!!type} onOpenChange={(open) => !open && onClose()}>

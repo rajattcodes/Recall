@@ -37,7 +37,7 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
   }
 
   if (error instanceof ZodError) {
-    const details = error.errors.map((err) => {
+    const details = error.issues.map((err) => {
       const path = err.path.join(".");
       return `${path}: ${err.message}`;
     });

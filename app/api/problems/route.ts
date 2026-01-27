@@ -4,6 +4,7 @@ import { requireUserIdApi } from "@/lib/auth-helpers";
 import { addDays } from "date-fns";
 import { z } from "zod";
 import { handleApiError, createNotFoundError } from "@/lib/api-errors";
+import { enrichProblemWithFailureNote } from "@/lib/problems/failure-notes";
 
 /**
  * GET /api/problems
@@ -32,13 +33,42 @@ export async function GET(request: Request) {
       include: {
         canonicalPattern: true,
         customPattern: true,
+        attemptHistory: {
+          orderBy: {
+            attemptedAt: "desc",
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    return NextResponse.json(problems);
+    const enrichedProblems = problems.map((problem) => {
+      const problemWithDates = {
+        ...problem,
+        nextReminderDate: problem.nextReminderDate.toISOString(),
+        createdAt: problem.createdAt.toISOString(),
+        lastAttemptedAt: problem.lastAttemptedAt?.toISOString() ?? null,
+        canonicalPattern: {
+          ...problem.canonicalPattern,
+          createdAt: problem.canonicalPattern.createdAt.toISOString(),
+        },
+        customPattern: problem.customPattern
+          ? {
+              ...problem.customPattern,
+              createdAt: problem.customPattern.createdAt.toISOString(),
+            }
+          : null,
+        attemptHistory: problem.attemptHistory.map((attempt) => ({
+          ...attempt,
+          attemptedAt: attempt.attemptedAt.toISOString(),
+        })),
+      };
+      return enrichProblemWithFailureNote(problemWithDates);
+    });
+
+    return NextResponse.json(enrichedProblems);
   } catch (error) {
     return handleApiError(error);
   }

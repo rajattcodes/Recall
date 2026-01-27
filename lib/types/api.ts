@@ -46,6 +46,8 @@ export interface Problem {
   lastAttemptedAt: string | null;
   canonicalPattern: CanonicalPattern;
   customPattern: CustomPattern | null;
+  attemptHistory?: AttemptHistory[];
+  failureNotes?: string[] | null;
 }
 
 /**
@@ -77,10 +79,22 @@ export interface CreateCustomPatternRequest {
 }
 
 /**
+ * Attempt History entry
+ */
+export interface AttemptHistory {
+  id: string;
+  problemId: string;
+  attemptedAt: string;
+  result: "solved" | "failed";
+  notes: string | null;
+}
+
+/**
  * Mark Problem request body
  */
 export interface MarkProblemRequest {
   result: "solved" | "failed";
+  failureNotes?: string[];
 }
 
 /**

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Problem } from "@/lib/types/api";
 import { ProblemCard } from "@/components/problem-card";
+import { FailureNoteDialog } from "@/components/failure-note-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { SectionHeader } from "@/components/section-header";
 import { toast } from "sonner";
@@ -24,10 +25,15 @@ export function TodayProblemsClient({
   const [failedProblems, setFailedProblems] =
     useState<Problem[]>(initialFailedProblems);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [failureDialogOpen, setFailureDialogOpen] = useState(false);
+  const [pendingFailureProblemId, setPendingFailureProblemId] = useState<
+    string | null
+  >(null);
 
   const handleMarkProblem = async (
     problemId: string,
-    result: "solved" | "failed"
+    result: "solved" | "failed",
+    failureNotes?: string[]
   ) => {
     setActionLoading(problemId);
     try {
@@ -36,7 +42,12 @@ export function TodayProblemsClient({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ result }),
+        body: JSON.stringify({
+          result,
+          ...(result === "failed" && failureNotes !== undefined
+            ? { failureNotes }
+            : {}),
+        }),
       });
 
       if (!response.ok) {
@@ -68,6 +79,25 @@ export function TodayProblemsClient({
     }
   };
 
+  const handleMarkFailedClick = (problemId: string) => {
+    setPendingFailureProblemId(problemId);
+    setFailureDialogOpen(true);
+  };
+
+  const handleFailureDialogSave = (notes: string[]) => {
+    if (pendingFailureProblemId) {
+      handleMarkProblem(pendingFailureProblemId, "failed", notes);
+      setPendingFailureProblemId(null);
+    }
+  };
+
+  const handleFailureDialogSkip = () => {
+    if (pendingFailureProblemId) {
+      handleMarkProblem(pendingFailureProblemId, "failed", []);
+      setPendingFailureProblemId(null);
+    }
+  };
+
   const allCaughtUp = dueProblems.length === 0 && failedProblems.length === 0;
 
   if (allCaughtUp) {
@@ -86,6 +116,13 @@ export function TodayProblemsClient({
 
   return (
     <>
+      <FailureNoteDialog
+        open={failureDialogOpen}
+        onOpenChange={setFailureDialogOpen}
+        onSave={handleFailureDialogSave}
+        onSkip={handleFailureDialogSkip}
+      />
+
       <section className="space-y-4">
         <SectionHeader
           icon={CalendarCheck}
@@ -102,7 +139,7 @@ export function TodayProblemsClient({
                 key={problem.id}
                 problem={problem}
                 onMarkSolved={() => handleMarkProblem(problem.id, "solved")}
-                onMarkFailed={() => handleMarkProblem(problem.id, "failed")}
+                onMarkFailed={() => handleMarkFailedClick(problem.id)}
                 isLoading={actionLoading === problem.id}
               />
             ))}
@@ -134,7 +171,7 @@ export function TodayProblemsClient({
                 key={problem.id}
                 problem={problem}
                 onMarkSolved={() => handleMarkProblem(problem.id, "solved")}
-                onMarkFailed={() => handleMarkProblem(problem.id, "failed")}
+                onMarkFailed={() => handleMarkFailedClick(problem.id)}
                 isLoading={actionLoading === problem.id}
                 showFailureCount
               />

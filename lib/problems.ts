@@ -2,6 +2,7 @@ import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/auth-helpers";
 import type { Problem } from "@/lib/types/api";
+import { enrichProblemWithFailureNote } from "@/lib/problems/failure-notes";
 
 const getTodayDate = () => {
   const today = new Date();
@@ -26,13 +27,40 @@ export const getDueProblems = cache(async (): Promise<Problem[]> => {
     include: {
       canonicalPattern: true,
       customPattern: true,
+      attemptHistory: {
+        orderBy: {
+          attemptedAt: "desc",
+        },
+      },
     },
     orderBy: {
       nextReminderDate: "asc",
     },
   });
 
-  return problems;
+  return problems.map((problem) => {
+    const problemWithDates = {
+      ...problem,
+      nextReminderDate: problem.nextReminderDate.toISOString(),
+      createdAt: problem.createdAt.toISOString(),
+      lastAttemptedAt: problem.lastAttemptedAt?.toISOString() ?? null,
+      canonicalPattern: {
+        ...problem.canonicalPattern,
+        createdAt: problem.canonicalPattern.createdAt.toISOString(),
+      },
+      customPattern: problem.customPattern
+        ? {
+            ...problem.customPattern,
+            createdAt: problem.customPattern.createdAt.toISOString(),
+          }
+        : null,
+      attemptHistory: problem.attemptHistory.map((attempt) => ({
+        ...attempt,
+        attemptedAt: attempt.attemptedAt.toISOString(),
+      })),
+    };
+    return enrichProblemWithFailureNote(problemWithDates);
+  });
 });
 
 export const getFailedProblems = cache(async (): Promise<Problem[]> => {
@@ -46,6 +74,11 @@ export const getFailedProblems = cache(async (): Promise<Problem[]> => {
     include: {
       canonicalPattern: true,
       customPattern: true,
+      attemptHistory: {
+        orderBy: {
+          attemptedAt: "desc",
+        },
+      },
     },
     orderBy: [
       {
@@ -57,7 +90,29 @@ export const getFailedProblems = cache(async (): Promise<Problem[]> => {
     ],
   });
 
-  return problems;
+  return problems.map((problem) => {
+    const problemWithDates = {
+      ...problem,
+      nextReminderDate: problem.nextReminderDate.toISOString(),
+      createdAt: problem.createdAt.toISOString(),
+      lastAttemptedAt: problem.lastAttemptedAt?.toISOString() ?? null,
+      canonicalPattern: {
+        ...problem.canonicalPattern,
+        createdAt: problem.canonicalPattern.createdAt.toISOString(),
+      },
+      customPattern: problem.customPattern
+        ? {
+            ...problem.customPattern,
+            createdAt: problem.customPattern.createdAt.toISOString(),
+          }
+        : null,
+      attemptHistory: problem.attemptHistory.map((attempt) => ({
+        ...attempt,
+        attemptedAt: attempt.attemptedAt.toISOString(),
+      })),
+    };
+    return enrichProblemWithFailureNote(problemWithDates);
+  });
 });
 
 export const getDueAndFailedProblems = cache(async () => {
@@ -83,11 +138,38 @@ export const getProblemsForPattern = cache(
       include: {
         canonicalPattern: true,
         customPattern: true,
+        attemptHistory: {
+          orderBy: {
+            attemptedAt: "desc",
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
       },
     });
-    return problems;
+    return problems.map((problem) => {
+      const problemWithDates = {
+        ...problem,
+        nextReminderDate: problem.nextReminderDate.toISOString(),
+        createdAt: problem.createdAt.toISOString(),
+        lastAttemptedAt: problem.lastAttemptedAt?.toISOString() ?? null,
+        canonicalPattern: {
+          ...problem.canonicalPattern,
+          createdAt: problem.canonicalPattern.createdAt.toISOString(),
+        },
+        customPattern: problem.customPattern
+          ? {
+              ...problem.customPattern,
+              createdAt: problem.customPattern.createdAt.toISOString(),
+            }
+          : null,
+        attemptHistory: problem.attemptHistory.map((attempt) => ({
+          ...attempt,
+          attemptedAt: attempt.attemptedAt.toISOString(),
+        })),
+      };
+      return enrichProblemWithFailureNote(problemWithDates);
+    });
   }
 );

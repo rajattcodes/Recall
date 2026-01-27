@@ -7,7 +7,15 @@ import {
   StateMachineError,
 } from "@/features/problems/lib/state-machine";
 import { z } from "zod";
-import { handleApiError, createNotFoundError } from "@/lib/api-errors";
+import {
+  handleApiError,
+  createNotFoundError,
+  createValidationError,
+} from "@/lib/api-errors";
+import { validateFailureNotes } from "@/lib/validation/failure-notes";
+import { serializeFailureNotes } from "@/lib/validation/parse-failure-notes";
+import { enrichProblemWithFailureNote } from "@/lib/problems/failure-notes";
+import type { Problem } from "@/lib/types/api";
 
 /**
  * PATCH /api/problems/[id]/mark
@@ -15,10 +23,12 @@ import { handleApiError, createNotFoundError } from "@/lib/api-errors";
  * Marks a problem as solved or failed and applies state transition.
  * Creates attempt_history record.
  * 
- * Body: { result: 'solved' | 'failed' }
+ * Body: { result: 'solved' | 'failed', failureNotes?: string[] }
+ * - failureNotes only valid when result === 'failed'
  */
 const markProblemSchema = z.object({
   result: z.enum(["solved", "failed"]),
+  failureNotes: z.array(z.string()).optional(),
 });
 
 export async function PATCH(
@@ -34,8 +44,25 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    // Validate input
+    // Validate input schema
     const validatedData = markProblemSchema.parse(body);
+
+    // Validate failureNotes if provided
+    if (validatedData.result === "failed" && validatedData.failureNotes !== undefined) {
+      const validation = validateFailureNotes(validatedData.failureNotes);
+      if (!validation.isValid) {
+        return createValidationError(
+          validation.error || "Invalid failure notes"
+        );
+      }
+    }
+
+    // Reject failureNotes when result is "solved"
+    if (validatedData.result === "solved" && validatedData.failureNotes !== undefined) {
+      return createValidationError(
+        "failureNotes can only be provided when result is 'failed'"
+      );
+    }
 
     // Fetch the problem and verify ownership
     const problem = await prisma.problem.findFirst({
@@ -81,6 +108,12 @@ export async function PATCH(
       };
     }
 
+    // Serialize failure notes if provided
+    const notesString =
+      validatedData.result === "failed"
+        ? serializeFailureNotes(validatedData.failureNotes)
+        : null;
+
     // Update problem and create attempt history in a transaction
     const [updatedProblem] = await prisma.$transaction([
       prisma.problem.update({
@@ -96,11 +129,53 @@ export async function PATCH(
           problemId: id,
           result: validatedData.result,
           attemptedAt: currentDate,
+          notes: notesString,
         },
       }),
     ]);
 
-    return NextResponse.json(updatedProblem);
+    // Fetch attempt history for response
+    const attemptHistory = await prisma.attemptHistory.findMany({
+      where: { problemId: id },
+      orderBy: { attemptedAt: "desc" },
+    });
+
+    const problemWithHistory: Problem = {
+      id: updatedProblem.id,
+      userId: updatedProblem.userId,
+      title: updatedProblem.title,
+      leetcodeUrl: updatedProblem.leetcodeUrl,
+      canonicalPatternId: updatedProblem.canonicalPatternId,
+      customPatternId: updatedProblem.customPatternId,
+      status: updatedProblem.status,
+      reminderStage: updatedProblem.reminderStage,
+      nextReminderDate: updatedProblem.nextReminderDate.toISOString(),
+      failureCount: updatedProblem.failureCount,
+      totalAttempts: updatedProblem.totalAttempts,
+      createdAt: updatedProblem.createdAt.toISOString(),
+      lastAttemptedAt: updatedProblem.lastAttemptedAt?.toISOString() ?? null,
+      canonicalPattern: {
+        ...updatedProblem.canonicalPattern,
+        createdAt: updatedProblem.canonicalPattern.createdAt.toISOString(),
+      },
+      customPattern: updatedProblem.customPattern
+        ? {
+            ...updatedProblem.customPattern,
+            createdAt: updatedProblem.customPattern.createdAt.toISOString(),
+          }
+        : null,
+      attemptHistory: attemptHistory.map((attempt) => ({
+        id: attempt.id,
+        problemId: attempt.problemId,
+        attemptedAt: attempt.attemptedAt.toISOString(),
+        result: attempt.result,
+        notes: attempt.notes,
+      })),
+    };
+
+    const enrichedProblem = enrichProblemWithFailureNote(problemWithHistory);
+
+    return NextResponse.json(enrichedProblem);
   } catch (error) {
     if (error instanceof StateMachineError) {
       return handleApiError(
