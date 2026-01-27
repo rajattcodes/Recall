@@ -59,6 +59,7 @@ interface ProblemFormProps {
   submitLabel?: string;
   showCustomPatternCreate?: boolean;
   onCreateCustomPattern?: () => void;
+  onCanonicalChange?: (canonicalId: string) => void;
 }
 
 export function ProblemForm({
@@ -71,6 +72,7 @@ export function ProblemForm({
   submitLabel = "Add Problem",
   showCustomPatternCreate = true,
   onCreateCustomPattern,
+  onCanonicalChange,
 }: ProblemFormProps) {
   const form = useForm<ProblemFormValues>({
     resolver: zodResolver(problemFormSchema),
@@ -90,10 +92,10 @@ export function ProblemForm({
     (cp) => cp.canonicalPatternId === selectedCanonicalPatternId
   );
 
-  // Reset custom pattern when canonical changes
   const handleCanonicalChange = (value: string) => {
     form.setValue("canonicalPatternId", value);
     form.setValue("customPatternId", "");
+    onCanonicalChange?.(value);
   };
 
   return (

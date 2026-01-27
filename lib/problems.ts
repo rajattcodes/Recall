@@ -71,3 +71,23 @@ export const getDueAndFailedProblems = cache(async () => {
     failedProblems,
   };
 });
+
+export const getProblemsForPattern = cache(
+  async (canonicalPatternId: string): Promise<Problem[]> => {
+    const userId = await requireUserId();
+    const problems = await prisma.problem.findMany({
+      where: {
+        userId,
+        canonicalPatternId,
+      },
+      include: {
+        canonicalPattern: true,
+        customPattern: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    return problems;
+  }
+);

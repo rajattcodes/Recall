@@ -15,13 +15,19 @@ import { cn } from "@/lib/utils";
 interface PatternCardProps {
   pattern: PatternOverview;
   onClick?: () => void;
+  asLink?: boolean;
   className?: string;
 }
 
 /**
  * Reusable pattern card component for displaying pattern overview
  */
-export function PatternCard({ pattern, onClick, className }: PatternCardProps) {
+export function PatternCard({
+  pattern,
+  onClick,
+  asLink,
+  className,
+}: PatternCardProps) {
   const { canonical_pattern, total_problems, due_count, failed_count } = pattern;
   const hasIssues = due_count > 0 || failed_count > 0;
 
@@ -30,7 +36,7 @@ export function PatternCard({ pattern, onClick, className }: PatternCardProps) {
       className={cn(
         "transition-all hover:shadow-md",
         hasIssues && "border-l-4 border-l-amber-500",
-        onClick && "cursor-pointer",
+        (onClick || asLink) && "cursor-pointer",
         className
       )}
       onClick={onClick}

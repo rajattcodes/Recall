@@ -22,11 +22,13 @@ import { Sparkles } from "lucide-react";
 interface AddProblemClientProps {
   initialCanonicalPatterns: CanonicalPattern[];
   initialCustomPatterns: CustomPattern[];
+  initialPatternId?: string | null;
 }
 
 export function AddProblemClient({
   initialCanonicalPatterns,
   initialCustomPatterns,
+  initialPatternId = null,
 }: AddProblemClientProps) {
   const router = useRouter();
   const [canonicalPatterns] = useState<CanonicalPattern[]>(
@@ -36,7 +38,9 @@ export function AddProblemClient({
     initialCustomPatterns
   );
   const [submitting, setSubmitting] = useState(false);
-  const [selectedCanonicalId, setSelectedCanonicalId] = useState<string>("");
+  const [selectedCanonicalId, setSelectedCanonicalId] = useState<string>(
+    initialPatternId ?? ""
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleSubmit = async (values: ProblemFormValues) => {
@@ -103,6 +107,12 @@ export function AddProblemClient({
             submitLabel="Add Problem"
             showCustomPatternCreate={true}
             onCreateCustomPattern={() => setDialogOpen(true)}
+            onCanonicalChange={setSelectedCanonicalId}
+            defaultValues={
+              initialPatternId
+                ? { canonicalPatternId: initialPatternId }
+                : undefined
+            }
           />
         </CardContent>
       </Card>

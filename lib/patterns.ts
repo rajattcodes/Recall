@@ -23,6 +23,15 @@ export const getCanonicalPatterns = cache(async (): Promise<CanonicalPattern[]> 
   return patterns;
 });
 
+export const getCanonicalPatternById = cache(
+  async (id: string): Promise<CanonicalPattern | null> => {
+    const pattern = await prisma.canonicalPattern.findUnique({
+      where: { id },
+    });
+    return pattern;
+  }
+);
+
 export const getCustomPatterns = cache(async (): Promise<CustomPattern[]> => {
   const userId = await requireUserId();
 

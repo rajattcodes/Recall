@@ -1,7 +1,11 @@
 "use client";
 
+import { useCallback, useState } from "react";
+import Link from "next/link";
 import { PatternOverview } from "@/lib/types/api";
+import { Problem } from "@/lib/types/api";
 import { StatsCard, StatsGrid } from "@/components/stats-card";
+import { StatsModal, type StatsModalType } from "@/components/stats-modal";
 import { PatternCard } from "@/components/pattern-card";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +22,39 @@ interface PatternsClientProps {
 }
 
 export function PatternsClient({ patterns }: PatternsClientProps) {
+  const [modalType, setModalType] = useState<StatsModalType | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalData, setModalData] = useState<{
+    all?: Problem[];
+    due?: Problem[];
+    failed?: Problem[];
+  }>({});
+
+  const openModal = useCallback(async (type: StatsModalType) => {
+    setModalType(type);
+    if (type === "active") return;
+    setModalLoading(true);
+    const updates: {
+      all?: Problem[];
+      due?: Problem[];
+      failed?: Problem[];
+    } = {};
+    if (type === "total") {
+      const res = await fetch("/api/problems");
+      if (res.ok) updates.all = (await res.json()) as Problem[];
+    }
+    if (type === "due") {
+      const res = await fetch("/api/problems/due");
+      if (res.ok) updates.due = (await res.json()) as Problem[];
+    }
+    if (type === "failed") {
+      const res = await fetch("/api/problems/failed");
+      if (res.ok) updates.failed = (await res.json()) as Problem[];
+    }
+    setModalData((prev) => ({ ...prev, ...updates }));
+    setModalLoading(false);
+  }, []);
+
   const patternsWithProblems = patterns.filter((p) => p.total_problems > 0);
   const emptyPatterns = patterns.filter((p) => p.total_problems === 0);
 
@@ -32,6 +69,7 @@ export function PatternsClient({ patterns }: PatternsClientProps) {
           icon={BookOpen}
           value={totalProblems}
           label="Total Problems"
+          onClick={() => openModal("total")}
         />
         <StatsCard
           icon={CalendarClock}
@@ -39,6 +77,7 @@ export function PatternsClient({ patterns }: PatternsClientProps) {
           label="Due Today"
           iconColor="text-amber-600"
           iconBgColor="bg-amber-500/10"
+          onClick={() => openModal("due")}
         />
         <StatsCard
           icon={AlertCircle}
@@ -46,6 +85,7 @@ export function PatternsClient({ patterns }: PatternsClientProps) {
           label="Need Attention"
           iconColor="text-destructive"
           iconBgColor="bg-destructive/10"
+          onClick={() => openModal("failed")}
         />
         <StatsCard
           icon={TrendingUp}
@@ -53,18 +93,29 @@ export function PatternsClient({ patterns }: PatternsClientProps) {
           label="Active Patterns"
           iconColor="text-green-600"
           iconBgColor="bg-green-500/10"
+          onClick={() => openModal("active")}
         />
       </StatsGrid>
+      <StatsModal
+        type={modalType}
+        onClose={() => setModalType(null)}
+        loading={modalLoading}
+        problems={modalData}
+        patterns={patterns}
+      />
 
       {patternsWithProblems.length > 0 ? (
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Your Patterns</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {patternsWithProblems.map((pattern) => (
-              <PatternCard
+              <Link
                 key={pattern.canonical_pattern.id}
-                pattern={pattern}
-              />
+                href={`/patterns/${pattern.canonical_pattern.id}`}
+                className="block"
+              >
+                <PatternCard pattern={pattern} asLink />
+              </Link>
             ))}
           </div>
         </section>
@@ -91,8 +142,11 @@ export function PatternsClient({ patterns }: PatternsClientProps) {
                 key={pattern.canonical_pattern.id}
                 variant="outline"
                 className="px-3 py-1 text-sm"
+                asChild
               >
-                {pattern.canonical_pattern.name}
+                <Link href={`/patterns/${pattern.canonical_pattern.id}`}>
+                  {pattern.canonical_pattern.name}
+                </Link>
               </Badge>
             ))}
           </div>

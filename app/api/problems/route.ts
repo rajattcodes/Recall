@@ -7,12 +7,11 @@ import { handleApiError, createNotFoundError } from "@/lib/api-errors";
 
 /**
  * GET /api/problems
- * 
- * Returns all problems for user
- * Includes: canonical_pattern, custom_pattern
- * Order by: created_at DESC
+ *
+ * Returns all problems for user. Optional ?canonicalPatternId=<id> filters by pattern.
+ * Includes: canonical_pattern, custom_pattern. Order by: created_at DESC.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const userIdOrResponse = await requireUserIdApi();
     if (userIdOrResponse instanceof NextResponse) {
@@ -20,10 +19,16 @@ export async function GET() {
     }
     const userId = userIdOrResponse;
 
+    const { searchParams } = new URL(request.url);
+    const canonicalPatternId = searchParams.get("canonicalPatternId");
+
+    const where: { userId: string; canonicalPatternId?: string } = { userId };
+    if (canonicalPatternId) {
+      where.canonicalPatternId = canonicalPatternId;
+    }
+
     const problems = await prisma.problem.findMany({
-      where: {
-        userId,
-      },
+      where,
       include: {
         canonicalPattern: true,
         customPattern: true,

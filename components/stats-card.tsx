@@ -8,6 +8,7 @@ interface StatsCardProps {
   label: string;
   iconColor?: string;
   iconBgColor?: string;
+  onClick?: () => void;
   className?: string;
 }
 
@@ -20,10 +21,29 @@ export function StatsCard({
   label,
   iconColor = "text-primary",
   iconBgColor = "bg-primary/10",
+  onClick,
   className,
 }: StatsCardProps) {
   return (
-    <Card className={className}>
+    <Card
+      className={cn(
+        onClick && "cursor-pointer min-h-[52px]",
+        className
+      )}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+      tabIndex={onClick ? 0 : undefined}
+      role={onClick ? "button" : undefined}
+    >
       <CardContent className="pt-6">
         <div className="flex items-center gap-3">
           <div

@@ -13,6 +13,18 @@
 # testing
 /coverage
 *.test.ts.snap
+*.test.js.snap
+# Note: Test files are typically kept in repos, uncomment below if you want to ignore them
+# __tests__/
+# __test__/
+# *.test.ts
+# *.test.tsx
+# *.test.js
+# *.test.jsx
+# *.spec.ts
+# *.spec.tsx
+# *.spec.js
+# *.spec.jsx
 
 # next.js
 /.next/
@@ -32,6 +44,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 lerna-debug.log*
+*.log
+logs/
+*.log.*
 
 # env files
 .env
@@ -102,3 +117,29 @@ next-env.d.ts
 .Trashes
 ehthumbs.db
 Desktop.ini
+
+# Development documentation and scripts
+REMOVE_AGENT_DIRS.md
+remove-agent-dirs.*
+PHASE_11_SUMMARY.md
+FEATURE_STRUCTURE.md
+*.md.bak
+
+# Lock files (keep package-lock.json, ignore others)
+bun.lock
+yarn.lock
+pnpm-lock.yaml
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+.cache/
+.temp/
+
+# Development tools
+.eslintcache
+.stylelintcache
