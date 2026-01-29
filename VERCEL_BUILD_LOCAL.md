@@ -1,6 +1,28 @@
 # Mimic Vercel Build Locally
 
-Commands to test the Vercel build process on your local machine.
+Commands and scripts to test the exact Vercel build process on your local machine.
+
+## Quick Start
+
+**Using npm scripts (easiest):**
+
+```bash
+# Bash/Git Bash
+npm run vercel:build
+
+# PowerShell
+npm run vercel:build:ps1
+```
+
+**Or use the scripts directly:**
+
+```bash
+# Bash/Git Bash
+bash scripts/vercel-build-local.sh
+
+# PowerShell
+powershell -ExecutionPolicy Bypass -File scripts/vercel-build-local.ps1
+```
 
 ## Prerequisites
 
@@ -73,22 +95,28 @@ npm run build
 npm start
 ```
 
-## What Each Command Does
+## Exact Vercel Build Process
 
-1. **`npm ci`** or **`npm install`** - Clean install
+The scripts mimic Vercel's exact build process:
+
+1. **`npm ci`** or **`npm install`** - Clean install (Step 1)
    - `npm ci` - Requires `package-lock.json`, installs exact versions (Vercel uses this)
    - `npm install` - Works without `package-lock.json`, installs dependencies
-   - Both run `postinstall` script automatically (which runs `prisma generate`)
+   - Automatically triggers `postinstall` script → runs `fix-prisma-import.js`
+   - Note: Prisma files don't exist yet, so this may do nothing
 
-2. **`npm run build`** - Production build
-   - Runs: `prisma generate && node scripts/fix-prisma-import.js && next build`
-   - Generates Prisma Client
-   - Fixes Prisma imports
-   - Builds Next.js production bundle
+2. **`npm run build`** - Production build (Step 2)
+   - Executes: `prisma generate && node scripts/fix-prisma-import.js && next build`
+   - `prisma generate` - Generates Prisma Client to `app/generated/prisma`
+   - `node scripts/fix-prisma-import.js` - Fixes import paths for Turbopack
+   - `next build` - Builds Next.js production bundle
 
-3. **`npm start`** - Test production server
+3. **`npm start`** - Test production server (Step 3)
+   - Executes: `next start`
    - Starts Next.js production server on `http://localhost:3000`
    - Tests the built application
+
+## What Each Command Does
 
 ## Environment Variables
 
