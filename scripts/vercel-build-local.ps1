@@ -24,23 +24,17 @@ if (Test-Path "package-lock.json") {
 Write-Host "✅ Dependencies installed" -ForegroundColor Green
 Write-Host ""
 
-Write-Host "🔧 Step 2: Postinstall script (runs automatically)" -ForegroundColor Yellow
-Write-Host "---------------------------------------------------" -ForegroundColor Yellow
-Write-Host "Note: postinstall runs fix-prisma-import.js" -ForegroundColor Gray
-Write-Host "This may not find Prisma files yet (they're generated during build)" -ForegroundColor Gray
-Write-Host ""
-
-Write-Host "🏗️  Step 3: Build (exact Vercel command)" -ForegroundColor Yellow
+Write-Host "🏗️  Step 2: Build (exact Vercel command)" -ForegroundColor Yellow
 Write-Host "----------------------------------------" -ForegroundColor Yellow
 Write-Host "Running: npm run build" -ForegroundColor Gray
-Write-Host "Which executes: prisma generate && node scripts/fix-prisma-import.js && next build" -ForegroundColor Gray
+Write-Host "Which executes: prisma generate && next build" -ForegroundColor Gray
 Write-Host ""
 $env:NODE_ENV = "production"
 npm run build
 Write-Host "✅ Build completed" -ForegroundColor Green
 Write-Host ""
 
-Write-Host "🚀 Step 4: Start production server" -ForegroundColor Yellow
+Write-Host "🚀 Step 3: Start production server" -ForegroundColor Yellow
 Write-Host "-----------------------------------" -ForegroundColor Yellow
 Write-Host "Running: npm start" -ForegroundColor Gray
 Write-Host "Which executes: next start" -ForegroundColor Gray

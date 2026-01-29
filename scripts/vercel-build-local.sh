@@ -22,23 +22,17 @@ fi
 echo "✅ Dependencies installed"
 echo ""
 
-echo "🔧 Step 2: Postinstall script (runs automatically)"
-echo "---------------------------------------------------"
-echo "Note: postinstall runs fix-prisma-import.js"
-echo "This may not find Prisma files yet (they're generated during build)"
-echo ""
-
-echo "🏗️  Step 3: Build (exact Vercel command)"
+echo "🏗️  Step 2: Build (exact Vercel command)"
 echo "----------------------------------------"
 echo "Running: npm run build"
-echo "Which executes: prisma generate && node scripts/fix-prisma-import.js && next build"
+echo "Which executes: prisma generate && next build"
 echo ""
 export NODE_ENV=production
 npm run build
 echo "✅ Build completed"
 echo ""
 
-echo "🚀 Step 4: Start production server"
+echo "🚀 Step 3: Start production server"
 echo "-----------------------------------"
 echo "Running: npm start"
 echo "Which executes: next start"

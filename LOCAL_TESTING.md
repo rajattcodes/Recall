@@ -70,7 +70,6 @@ npm run build
 
 **If you see errors:**
 - `Module not found: Can't resolve '@prisma/client'` → Prisma Client not generated
-- `Module not found: Can't resolve '../app/generated/prisma'` → Old import path still exists
 - Any other errors → Check the error message and fix accordingly
 
 ### 5. Test Development Server

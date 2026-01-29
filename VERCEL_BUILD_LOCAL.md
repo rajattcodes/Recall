@@ -102,13 +102,10 @@ The scripts mimic Vercel's exact build process:
 1. **`npm ci`** or **`npm install`** - Clean install (Step 1)
    - `npm ci` - Requires `package-lock.json`, installs exact versions (Vercel uses this)
    - `npm install` - Works without `package-lock.json`, installs dependencies
-   - Automatically triggers `postinstall` script → runs `fix-prisma-import.js`
-   - Note: Prisma files don't exist yet, so this may do nothing
 
 2. **`npm run build`** - Production build (Step 2)
-   - Executes: `prisma generate && node scripts/fix-prisma-import.js && next build`
-   - `prisma generate` - Generates Prisma Client to `app/generated/prisma`
-   - `node scripts/fix-prisma-import.js` - Fixes import paths for Turbopack
+   - Executes: `prisma generate && next build`
+   - `prisma generate` - Generates Prisma Client to default location (`node_modules/.prisma/client`)
    - `next build` - Builds Next.js production bundle
 
 3. **`npm start`** - Test production server (Step 3)
