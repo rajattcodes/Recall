@@ -61,6 +61,7 @@ logs/
 next-env.d.ts
 
 # prisma
+/app/generated
 
 # IDE and editor files
 .vscode/
