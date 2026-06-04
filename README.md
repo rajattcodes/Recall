@@ -17,6 +17,19 @@ RecallForge is a pattern-first LeetCode practice system that feels like NeetCode
 
 ## Tech Stack
 
+<div align="center">
+  <img src="https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white" alt="Prisma" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Radix%20UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white" alt="Radix UI" />
+  <img src="https://img.shields.io/badge/shadcn%2Fui-000000?style=for-the-badge&logo=shadcnui&logoColor=white" alt="shadcn/ui" />
+  <img src="https://img.shields.io/badge/Zod-3068b7?style=for-the-badge&logo=zod&logoColor=white" alt="Zod" />
+  <img src="https://img.shields.io/badge/Resend-000000?style=for-the-badge&logo=resend&logoColor=white" alt="Resend" />
+</div>
+<br />
+
 | Layer | Technology |
 |-------|-----------|
 | Framework | Next.js 16 (App Router) |
@@ -26,6 +39,28 @@ RecallForge is a pattern-first LeetCode practice system that feels like NeetCode
 | Email | Resend |
 | UI | Tailwind CSS, Radix UI, shadcn/ui components |
 | Validation | Zod |
+
+## Architecture
+
+The system follows a typical Next.js full-stack architecture:
+
+1. **Frontend (Client)**
+   - React components (Server & Client components).
+   - Tailwind CSS and shadcn/ui for UI components.
+   - Server Actions for form submissions and data mutations.
+
+2. **Backend (Server)**
+   - Next.js API Routes for webhook integrations (e.g., cron jobs).
+   - Next.js Server Components for data fetching.
+   - Better Auth handles session management and authentication securely.
+   
+3. **Data Layer**
+   - PostgreSQL serves as the primary data store.
+   - Prisma ORM is used for typed database access and schema management.
+   
+4. **External Services**
+   - **Resend**: Used for triggering and sending daily digest emails to users.
+   - **Cron Jobs**: Vercel Cron is configured to hit an API route (`/api/cron/daily-digest`) daily to execute scheduled tasks.
 
 ## Getting Started
 
